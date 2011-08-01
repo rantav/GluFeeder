@@ -1,0 +1,3 @@
+Glu Feeder is not a working project. It's just a snapshot of work done by me at outbrain and to the request of some folks I'm exposing (parts) of this work as open source.
+Be warned: this will not run as is, but is merely intended to serve as example and reference to a glu client with extra functionality describe here http://prettyprint.me/2011/01/24/continuous-deployment-at-outbrain/ and here http://prettyprint.me/2011/07/31/visualizing-our-deployment-pipeline/ and a few other places on the net...
+
