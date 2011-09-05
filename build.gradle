@@ -1,0 +1,44 @@
+apply plugin: 'java'
+apply plugin: 'war'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.6
+version = '1.0'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'javax.servlet:jstl:1.1.2'
+  compile 'taglibs:standard:1.1.2'
+  compile 'org.codehaus.jackson:jackson-mapper-asl:1.5.7'
+  compile 'commons-httpclient:commons-httpclient:3.0.1'
+  compile 'commons-io:commons-io:1.2'
+  compile 'com.google.collections:google-collections:1.0-rc1'
+  compile "org.springframework:spring-core:${springVersion}"
+  compile "org.springframework:spring-beans:${springVersion}"
+  compile "org.springframework:spring-orm:${springVersion}"
+  compile "org.springframework:spring-web:${springVersion}"
+  compile "org.springframework:spring-webmvc:${springVersion}"
+  compile "org.hibernate:hibernate-annotations:3.2.1.ga"
+  compile "commons-dbcp:commons-dbcp:1.4"
+  compile "hsqldb:hsqldb:1.8.0.7"
+  // Remove this if you don't use svn
+  compile 'org.tmatesoft.svnkit:svnkit:1.2.3.5521'
+
+  compile "org.slf4j:slf4j-api:1.5.6"
+  compile 'commons-lang:commons-lang:2.6'
+  compile 'com.ibm.icu:icu4j:4.8.1'
+
+  runtime 'javax.transaction:jta:1.1'
+
+  providedCompile "javax.servlet:servlet-api:2.5"
+  
+  testCompile 'junit:junit:4.+'
+  testCompile 'org.mockito:mockito-all:1.8.4'
+  testCompile "org.springframework:spring-test:${springVersion}"
+  testCompile 'com.google.code.gson:gson:1.7.1'
+  testCompile 'net.sf.json-lib:json-lib:2.4:jdk15'
+  testCompile 'org.slf4j:nlog4j:1.2.25'
+}

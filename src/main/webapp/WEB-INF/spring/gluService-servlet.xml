@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+  
+  <import resource="classpath:gluService-jdbc.xml"/>
+
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <property name="ignoreUnresolvablePlaceholders" value="false"/>
+    <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
+    <property name="location" value="classpath:GluService.properties"/>
+  </bean>
+
+  <!-- Configures the @Controller programming model -->
+  <mvc:annotation-driven />
+
+  <bean class="com.outbrain.glu.controller.GluController" scope="prototype">
+    <constructor-arg ref="deploymentUpdater"/>
+    <constructor-arg ref="deploymentsDao"/>
+    <constructor-arg ref="committersDao"/>
+    <constructor-arg ref="tagsDao"/>
+    <constructor-arg ref="modulesDao"/>
+    <constructor-arg ref="clustersDao"/>
+    <constructor-arg ref="teamCityApi"/>
+    <constructor-arg ref="svnGluJson"/>
+    <constructor-arg ref="svnApi"/>
+    <constructor-arg ref="gluProxy"/>
+  </bean>
+
+  <bean
+    class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+    <property name="mediaTypes">
+      <map>
+        <entry key="html" value="text/html" />
+        <entry key="json" value="application/json" />
+      </map>
+    </property>
+    <property name="viewResolvers">
+      <list>
+        <bean
+          class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+          <property name="viewClass"
+            value="org.springframework.web.servlet.view.JstlView" />
+          <property name="prefix" value="/WEB-INF/jsp/" />
+          <property name="suffix" value=".jsp" />
+        </bean>
+      </list>
+    </property>
+    <property name="defaultViews">
+      <list>
+        <bean
+          class="org.springframework.web.servlet.view.json.MappingJacksonJsonView">
+          <property name="renderedAttributes">
+            <set>
+              <value>sourceSettingsVO</value>
+            </set>
+          </property>
+        </bean>
+      </list>
+    </property>
+  </bean>
+
+  <bean id="httpClient" class="org.apache.commons.httpclient.HttpClient" scope="prototype"/>
+  
+  <bean id="deploymentUpdater" class="com.outbrain.glu.DeploymentUpdater" scope="prototype">
+    <constructor-arg ref="SVNUpdaterFactory" />
+    <constructor-arg value="${topology.file.path}" />
+    <constructor-arg ref="gluProxy" />
+    <constructor-arg ref="yummer" />
+    <constructor-arg>
+      <set>
+        <value>${yum.repositories.ny}</value>
+        <value>${yum.repositories.chicago}</value>
+        <value>${yum.repositories.la}</value>
+      </set>
+    </constructor-arg>
+    <constructor-arg ref="yammerApi" />
+    <constructor-arg>
+      <bean class="java.util.concurrent.Executors" factory-method="newFixedThreadPool">
+        <constructor-arg value="5"/>
+      </bean>
+    </constructor-arg>
+    <constructor-arg ref="nagios" />
+    <constructor-arg ref="deploymentsDao" />
+    <constructor-arg ref="mailSender" />
+  </bean>
+
+  <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl"/>
+
+  <bean id="teamCityApi" class="com.outbrain.glu.teamc.TeamCityApi" scope="prototype">
+    <constructor-arg value="${teamcity.host}"/>
+    <constructor-arg value="${teamcity.port}"/>
+    <constructor-arg value="${teamcity.usernamePassword}"/>
+    <constructor-arg value="${teamcity.build.trigger.id}"/>
+    <constructor-arg ref="httpClient"/>
+    <constructor-arg>
+      <bean class="org.apache.commons.httpclient.methods.GetMethod" scope="prototype" />
+    </constructor-arg>
+  </bean>
+
+  <bean id="svnGluJson" class="com.outbrain.glu.svn.SVNGluJson" scope="prototype">
+    <constructor-arg value="${svn.url}"/>
+    <constructor-arg value="${svn.user}"/>
+    <constructor-arg value="${svn.pass}"/>
+    <constructor-arg value="${topology.file.path}"/>
+    <constructor-arg ref="svnRepositoryFactory"/>
+  </bean>
+
+
+  <bean id="svnApi" class="com.outbrain.glu.svn.SvnApi">
+    <constructor-arg value="${svn.url}"/>
+    <constructor-arg value="${svn.user}"/>
+    <constructor-arg value="${svn.pass}"/>
+    <constructor-arg ref="svnRepositoryFactory"/>
+  </bean>
+
+  <bean id="yammerApi" class="com.outbrain.glu.yammer.YammerApi" scope="prototype">
+    <constructor-arg ref="mailSender"/>
+    <constructor-arg value="${glu.server}plan/deployments"/>
+    <constructor-arg value="${email.from}"/>
+  </bean>
+
+  <bean id="nagios" class="com.outbrain.glu.nagios.NagiosProxy" scope="prototype">
+    <constructor-arg value="${nagios.notification.url}"/>
+    <constructor-arg value="${nagios.username}"/>
+    <constructor-arg value="${nagios.password}"/>
+    <constructor-arg ref="httpClient"/>
+    <constructor-arg>
+      <bean class="org.apache.commons.httpclient.methods.GetMethod" scope="prototype" />
+    </constructor-arg>
+  </bean>
+  
+  <!--  Glu HTTP methods  -->
+  <bean id="abstractGluRpc" class="com.outbrain.glu.rpc.AbstractGluRpc" abstract="true">
+    <constructor-arg value="${glu.server}" />
+    <constructor-arg value="${glu.fabricName}" />
+    <constructor-arg ref="httpClient"/>
+    <constructor-arg value="${glu.username}" />
+    <constructor-arg value="${glu.password}" />
+  </bean>
+  <bean id="abstractPostMethodGluRpc" class="com.outbrain.glu.rpc.AbstractPostBasedGluRpc" 
+      abstract="true" parent="abstractGluRpc">
+    <constructor-arg name="postMethod">
+      <bean class="org.apache.commons.httpclient.methods.PostMethod" scope="prototype" />
+    </constructor-arg>
+  </bean>
+  <bean id="executionStatusReader" class="com.outbrain.glu.rpc.ExecutionStatusReader"
+      parent="abstractGluRpc" scope="prototype" >
+    <constructor-arg name="headMethod">
+      <bean class="org.apache.commons.httpclient.methods.HeadMethod" scope="prototype" />
+    </constructor-arg>
+  </bean>
+  <bean id="getModel" class="com.outbrain.glu.rpc.GetModel" scope="prototype" parent="abstractGluRpc">
+    <constructor-arg name="getMethod">
+      <bean class="org.apache.commons.httpclient.methods.GetMethod" scope="prototype" />
+    </constructor-arg>
+  </bean>
+  <bean name="executionPlanCreator" class="com.outbrain.glu.rpc.ExecutionPlanCreator" parent="abstractPostMethodGluRpc" scope="prototype" />
+  <bean name="planExecutor" class="com.outbrain.glu.rpc.PlanExecutor" parent="abstractPostMethodGluRpc" scope="prototype" />
+  <bean id="gluProxy" class="com.outbrain.glu.rpc.GluProxy" scope="prototype">
+    <constructor-arg>
+      <bean class="com.outbrain.glu.rpc.ModelLoader" parent="abstractPostMethodGluRpc" scope="prototype"/>
+    </constructor-arg>
+    <constructor-arg ref="executionPlanCreatorFactory"/>
+    <constructor-arg ref="planExecutorFactory"/>
+    <constructor-arg ref="executionStatusReaderFactory"/>
+    <constructor-arg ref="getModelFactory"/>
+  </bean>
+
+  <!-- Glu HTTP Methods Factories -->
+  <bean id="executionStatusReaderFactory" class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean">
+    <property name="serviceLocatorInterface" value="com.outbrain.glu.rpc.ExecutionStatusReaderFactory" />
+  </bean>
+  <bean id="executionPlanCreatorFactory" class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean">
+    <property name="serviceLocatorInterface" value="com.outbrain.glu.rpc.ExecutionPlanCreatorFactory" />
+  </bean>
+  <bean id="planExecutorFactory" class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean">
+    <property name="serviceLocatorInterface" value="com.outbrain.glu.rpc.PlanExecutorFactory" />
+  </bean>
+  <bean id="getModelFactory" class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean">
+    <property name="serviceLocatorInterface" value="com.outbrain.glu.rpc.GetModelFactory" />
+  </bean>
+
+  <bean id="yummer" class="com.outbrain.yummer.Yummer">
+    <constructor-arg>
+      <bean factory-method="getRuntime" class="java.lang.Runtime"/>
+    </constructor-arg>
+  </bean>
+
+  <bean id="SVNUpdaterFactory" class="com.outbrain.glu.svn.SVNUpdaterFactory">
+    <constructor-arg>
+      <bean id="svnReporitory" factory-bean="svnRepositoryFactory"
+        factory-method="create">
+        <constructor-arg value="${svn.url}" index="0" />
+        <constructor-arg value="${svn.user}" index="1" />
+        <constructor-arg value="${svn.pass}" index="2" />
+      </bean>
+    </constructor-arg>
+  </bean>
+
+  <bean id="svnRepositoryFactory" class="com.outbrain.glu.svn.SvnRepositoryFactory" />
+
+</beans>

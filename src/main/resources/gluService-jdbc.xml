@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+  <bean id="hsqlDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+    destroy-method="close">
+    <property name="driverClassName" value="org.hsqldb.jdbcDriver" />
+    <property name="url" value="jdbc:hsqldb:file:/glufeeder/data" />
+  </bean>
+
+  <bean id="transactionManager"
+    class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+    <property name="sessionFactory" ref="sessionFactory" />
+  </bean>
+
+  <bean id="baseTransactionProxy"
+    class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean"
+    abstract="true">
+    <property name="transactionManager">
+      <ref bean="transactionManager" />
+    </property>
+    <property name="transactionAttributes">
+      <props>
+        <prop key="*">PROPAGATION_REQUIRED,ISOLATION_READ_COMMITTED</prop>
+      </props>
+    </property>
+  </bean>
+
+  <bean id="sessionFactory"
+    class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+    <property name="dataSource" ref="hsqlDataSource" />
+    <property name="annotatedClasses">
+      <list>
+        <value>com.outbrain.glu.data.Deployment</value>
+        <value>com.outbrain.glu.data.DeploymentPhase</value>
+        <value>com.outbrain.glu.data.Tag</value>
+        <value>com.outbrain.glu.data.Committer</value>
+        <value>com.outbrain.glu.data.Module</value>
+        <value>com.outbrain.glu.data.Cluster</value>
+        <value>com.outbrain.glu.rpc.GluProgressStatus</value>
+      </list>
+    </property>
+    <property name="hibernateProperties">
+      <props>
+        <prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop>
+        <prop key="hibernate.show_sql">false</prop>
+        <prop key="hibernate.format_sql">true</prop>
+        <prop key="hibernate.hbm2ddl.auto">update</prop>
+      </props>
+    </property>
+  </bean>
+
+  <bean id="baseDao" abstract="true">
+    <property name="sessionFactory" ref="sessionFactory" />
+  </bean>
+
+  <bean id="deploymentsDao" parent="baseTransactionProxy">
+    <property name="target">
+      <bean class="com.outbrain.glu.data.HibernateDeploymentsDao" parent="baseDao" />
+    </property>
+  </bean>
+  <bean id="tagsDao" parent="baseTransactionProxy">
+    <property name="target">
+      <bean class="com.outbrain.glu.data.HibernateTagsDao" parent="baseDao" />
+    </property>
+  </bean>
+  <bean id="committersDao" parent="baseTransactionProxy">
+    <property name="target">
+      <bean class="com.outbrain.glu.data.HibernateCommittersDao" parent="baseDao" />
+    </property>
+  </bean>
+  <bean id="modulesDao" parent="baseTransactionProxy">
+    <property name="target">
+      <bean class="com.outbrain.glu.data.HibernateModulesDao" parent="baseDao" />
+    </property>
+  </bean>
+  <bean id="clustersDao" parent="baseTransactionProxy">
+    <property name="target">
+      <bean class="com.outbrain.glu.data.HibernateClustersDao" parent="baseDao" />
+    </property>
+  </bean>
+</beans>
