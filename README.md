@@ -1,3 +1,17 @@
-Glu Feeder is not a working project. It's just a snapshot of work done by me at outbrain and to the request of some folks I'm exposing (parts) of this work as open source.
-Be warned: this will not run as is, but is merely intended to serve as example and reference to a glu client with extra functionality describe here http://prettyprint.me/2011/01/24/continuous-deployment-at-outbrain/ and here http://prettyprint.me/2011/07/31/visualizing-our-deployment-pipeline/ and a few other places on the net...
+What is GluFeeder
+================
+GluFeeder is a tool used by outbrain to enhance glu. It uses glu's API as well as other tools such as subversion, teamcity for builds, yum, yammer etc.
+The feeder had been in production use for over 8 months as of today and is continually improving and adding features.
+The main goal of the feeder is to bridge the gap between outbrain's special requirements such as working with external services (subversion, yammer, nagios) and glu's core functionality as exposed by gul's api. The feeder is used to to implement Continuous Deployment at outbrain (there are a few additional tools such as a subversion hook but they are out of scope).
+
+Current Condition
+-----------------
+While the feeder is in production for a few months and is in generally considered stable (although new features keep getting added), this specific copy of the feeder is not considered production ready.
+The copy is meant to be used as a reference only to outbrain's work (as requested by users on the mailing list) but it's not maintained or supported. It has a build file and all the tests pass (although some were emtied due to security consideration) but as noted, again, it's not meant to be a functional piece of software, it's just a current snapshot of how things are at outbrain.
+
+The following blog posts descrive parts of the tool in plain english 
+ - http://prettyprint.me/2011/01/24/continuous-deployment-at-outbrain/ 
+ - http://prettyprint.me/2011/07/31/visualizing-our-deployment-pipeline/
+
+We hope it will serve you well.
 
